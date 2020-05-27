@@ -104,28 +104,25 @@ void writeCMakeFiles(Directory const & directory) {
 	if (directory.containsFiles()) {
 		auto ofs = std::ofstream(directory.path.string() + "/CMakeLists.txt");
 		if (ofs.is_open()) {
+			if (!directory.files.empty()) {
+				ofs << "target_sources(${PROJECT_NAME}" << std::endl
+					<< "		PRIVATE" << std::endl;
+				for (auto const& f : directory.files) {
+					auto file = f.string().substr(INPUT_DIRECTORY.length());
+					std::cout << f.filename().string() << std::endl;
+					ofs << "		${CMAKE_CURRENT_LIST_DIR}/" << f.filename().string() << std::endl;
+				}
+				ofs << ")" << std::endl << std::endl;
+			}
+
 			if (!directory.directories.empty()) {
 				for (auto const & d : directory.directories) {
 					writeCMakeFiles(d);
 
 					if (d.containsFiles()) {
-						ofs << "add_subdirectory(\"${CMAKE_CURRENT_SOURCE_DIR}/" << d.path.filename().string() << "\")" << std::endl;
+						ofs << "add_subdirectory(\"${CMAKE_CURRENT_LIST_DIR}/" << d.path.filename().string() << "\")" << std::endl;
 					}
 				}
-			}
-
-			if (!directory.files.empty()) {
-				ofs << "set(SOURCE" << std::endl
-					<< "   ${SOURCE}" << std::endl;
-				for (auto const & f : directory.files) {
-					auto file = f.string().substr(INPUT_DIRECTORY.length());
-					//std::replace(std::begin(file), std::end(file), '\\', '/');
-					//std::cout << file << std::endl;
-					std::cout << f.filename().string() << std::endl;
-					ofs << "   ${CMAKE_CURRENT_SOURCE_DIR}/" << f.filename().string() << std::endl;
-				}
-				ofs << "   PARENT_SCOPE" << std::endl
-					<< ")" << std::endl;
 			}
 			ofs.close();
 		}
